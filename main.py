@@ -63,7 +63,18 @@ async def on_ready():
 async def drive_link(interaction: discord.Interaction):
 	await interaction.response.send_message("https://drive.google.com/drive/folders/1tU7M-_EPOVlBaus13XrG2qZkaFWsT7xp", ephemeral = True)
 
+class DisabledFinishView(discord.ui.View):
+	@discord.ui.button(
+		label = "Finish Lunge",
+		style = discord.ButtonStyle.gray,
+		disabled=True
+	)
+	async def verify_link(self, interaction: discord.Interaction, button: discord.ui.Button):
+		pass
+
+
 class FinishView(discord.ui.View):
+	message = None
 	channel = None
 	start_time = time.time()
 
@@ -82,7 +93,12 @@ class FinishView(discord.ui.View):
 		style = discord.ButtonStyle.success
 	)
 	async def verify_link(self, interaction: discord.Interaction, button: discord.ui.Button):
-		await interaction.response.send_message(f"{interaction.user.mention} held lunge for {(time.time() - self.start_time)} seconds.")
+		load_data()
+		data["leaderboard"].append([round(time.time() - self.start_time, 1), interaction.user.id])
+		data["leaderboard"].sort(reverse = True) 
+		save_data()
+		await interaction.response.send_message(f"{interaction.user.mention} held lunge for {round(time.time() - self.start_time, 1)} seconds. You are position `{data['leaderboard'].index([round(time.time() - self.start_time, 1), interaction.user.id]) + 1}` on the leaderboard.")
+		await self.message.edit(view = DisabledFinishView())
 
 class DisabledView(discord.ui.View):
 	@discord.ui.button(
@@ -118,13 +134,30 @@ class StartView(discord.ui.View):
 		self.view.channel = self.channel
 		await self.view.wait()
 
+@bot.tree.command()
+async def get_leaderboard(interaction: discord.Interaction):
+	load_data()
+	lb = data["leaderboard"]
+	st = ""
+	i = 1
+	for e in lb[:10]:
+		st += f"{i}. {e[0]} - {discord.utils.get(interaction.guild.members, id=str(e[1]))}\n"
+	embed = discord.Embed(title = "Lunge Time Leaderboard", description = st)
+	await interaction.response.send_message(embed = embed)
 
 @bot.tree.command()
 async def ping_lunge(interaction: discord.Interaction):
 	global data
 	load_data()
 	admin_role = discord.utils.get(interaction.guild.roles, id=data["config"]["admin_role"])
-	
+
+	if time.time() - data["last_ping"] < 2000 and not admin_role in interaction.user.roles:
+		await interaction.response.send_message("Please wait " + str(2000 - (time.time() - data["last_ping"])) + " seconds before trying to mass ping people again thanks!", ephemeral = True)
+		return
+	data["last_ping"] = time.time()
+
+	save_data()
+
 	await interaction.response.send_message("ok", ephemeral = True)
 
 	role = discord.utils.get(interaction.guild.roles, id=data["config"]["ping_role"])
