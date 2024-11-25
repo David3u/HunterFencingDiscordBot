@@ -16,7 +16,7 @@ import time
 ######
 # CONFIG
 
-guild_id = 1309277543320391750
+guild_id = 628732169069789205
 
 
 ######
@@ -90,15 +90,16 @@ class FinishView(discord.ui.View):
 	
 	@discord.ui.button(
 		label = "Finish Lunge",
-		style = discord.ButtonStyle.success
+		style = discord.ButtonStyle.danger
 	)
 	async def verify_link(self, interaction: discord.Interaction, button: discord.ui.Button):
 		load_data()
-		data["leaderboard"].append([round(time.time() - self.start_time, 1), interaction.user.id])
+		held_time = round(time.time() - self.start_time, 1)
+		data["leaderboard"].append([held_time, interaction.user.id])
 		data["leaderboard"].sort(reverse = True) 
 		save_data()
-		await interaction.response.send_message(f"{interaction.user.mention} held lunge for {round(time.time() - self.start_time, 1)} seconds. You are position `{data['leaderboard'].index([round(time.time() - self.start_time, 1), interaction.user.id]) + 1}` on the leaderboard.")
-		await self.message.edit(view = DisabledFinishView())
+		await self.message.edit(view = DisabledFinishView(), content = f"Started lunge timer! `{held_time} seconds ago`")
+		await interaction.response.send_message(f"{interaction.user.mention} held lunge for {held_time} seconds. You are position `{data['leaderboard'].index([held_time, interaction.user.id]) + 1}` on the leaderboard.")
 
 class DisabledView(discord.ui.View):
 	@discord.ui.button(
@@ -127,9 +128,13 @@ class StartView(discord.ui.View):
 		style = discord.ButtonStyle.success
 	)
 	async def verify_link(self, interaction: discord.Interaction, button: discord.ui.Button):
-		self.view = FinishView(timeout = 240)
+		self.view = FinishView(timeout = 400)
 
-		self.view.message = await interaction.response.send_message("Started lunge timer!", ephemeral = True, view = self.view)
+
+		await interaction.response.send_message(f"Started lunge timer! <t:{int(time.time())}:R>", ephemeral = True, view = self.view)
+		
+		self.view.message = await interaction.original_response()
+
 		self.view.restart_timer()
 		self.view.channel = self.channel
 		await self.view.wait()
@@ -141,7 +146,7 @@ async def get_leaderboard(interaction: discord.Interaction):
 	st = ""
 	i = 1
 	for e in lb[:10]:
-		st += f"{i}. {e[0]} - {discord.utils.get(interaction.guild.members, id=str(e[1]))}\n"
+		st += f"{i}. `{e[0]}` - {(await interaction.guild.fetch_member(e[1])).mention}\n"
 	embed = discord.Embed(title = "Lunge Time Leaderboard", description = st)
 	await interaction.response.send_message(embed = embed)
 
@@ -171,7 +176,6 @@ async def ping_lunge(interaction: discord.Interaction):
 	finish_view.user = interaction.user
 	await finish_view.wait()
       
-   
 
 bot.run(str(os.getenv("TOKEN")))
 
