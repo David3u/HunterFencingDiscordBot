@@ -63,6 +63,10 @@ async def on_ready():
 async def drive_link(interaction: discord.Interaction):
 	await interaction.response.send_message("https://drive.google.com/drive/folders/1tU7M-_EPOVlBaus13XrG2qZkaFWsT7xp", ephemeral = True)
 
+@bot.tree.command()
+async def locker_codes(interaction: discord.Interaction):
+	await interaction.response.send_message("https://cdn.discordapp.com/attachments/628748709081120770/876904561229582376/image0.jpg?ex=6744ca83&is=67437903&hm=f5c74c8cd36148675c265f3c8a4f62652160faf961869827e4a5967ad3043628&", ephemeral=True)
+
 class DisabledFinishView(discord.ui.View):
 	@discord.ui.button(
 		label = "Finish Lunge",
@@ -128,7 +132,7 @@ class StartView(discord.ui.View):
 		style = discord.ButtonStyle.success
 	)
 	async def verify_link(self, interaction: discord.Interaction, button: discord.ui.Button):
-		self.view = FinishView(timeout = 400)
+		self.view = FinishView(timeout = 500)
 
 
 		await interaction.response.send_message(f"Started lunge timer! <t:{int(time.time())}:R>", ephemeral = True, view = self.view)
