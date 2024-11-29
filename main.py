@@ -11,6 +11,7 @@ import json
 import random
 import string
 import time
+import typing
 
 
 ######
@@ -40,9 +41,40 @@ def save_data():
 	global data
 	with open("mydata.json","w") as f:
 		json.dump(data, f)
-		
 
+def ep(id, amt):
+	id = str(id)
+	load_data()
+	if id not in data["ep"]:
+		data["ep"][id] = 0
+	data["ep"][id] += amt
+	save_data() 
+	return data["ep"][id] 
 
+def get_ep(id):
+	id = str(id)
+	load_data() 
+	if id not in data["ep"]:
+		data["ep"][id] = 0
+		save_data() 
+	return data["ep"][id] 
+
+def jp(id, amt):
+	id = str(id)
+	load_data()
+	if id not in data["jp"]:
+		data["jp"][id] = 0
+	data["jp"][id] += amt
+	save_data() 
+	return data["jp"][id] 
+
+def get_jp(id):
+	id = str(id)
+	load_data() 
+	if id not in data["jp"]:
+		data["jp"][id] = 0
+		save_data() 
+	return data["jp"][id] 
 
 @bot.event 
 async def on_ready():
@@ -103,7 +135,7 @@ class FinishView(discord.ui.View):
 		data["leaderboard"].sort(reverse = True) 
 		save_data()
 		await self.message.edit(view = DisabledFinishView(), content = f"Started lunge timer! `{held_time} seconds ago`")
-		await interaction.response.send_message(f"{interaction.user.mention} held lunge for {held_time} seconds. You are position `{data['leaderboard'].index([held_time, interaction.user.id]) + 1}` on the leaderboard.")
+		await interaction.response.send_message(f"{interaction.user.mention} held lunge for {held_time} seconds. You are position `{data['leaderboard'].index([held_time, interaction.user.id]) + 1}` on the leaderboard.\nYou got `{jp(interaction.user.id, held_time//40)}` Jeff points!")
 
 class DisabledView(discord.ui.View):
 	@discord.ui.button(
@@ -144,14 +176,51 @@ class StartView(discord.ui.View):
 		await self.view.wait()
 
 @bot.tree.command()
-async def get_leaderboard(interaction: discord.Interaction):
+async def get_leaderboard(interaction: discord.Interaction, user: typing.Optional[discord.Member]):
+	if user == None:
+		load_data()
+		lb = data["leaderboard"]
+		st = ""
+		i = 0
+		for e in lb[:10]:
+			i += 1
+			st += f"{i} `{e[0]}` - {(await interaction.guild.fetch_member(e[1])).mention}\n"
+		embed = discord.Embed(title = "Global Lunge Time Leaderboard", description = st)
+		await interaction.response.send_message(embed = embed)
+	else:
+		load_data()
+		lb = data["leaderboard"]
+		st = ""
+		i = 1
+		s = 1
+		for e in lb:
+			if i > 10:
+				break
+			if e[1] == user.id:
+				st += f"{s} `{e[0]}` - {user.mention}\n"
+				i += 1
+
+			s += 1
+		embed = discord.Embed(title = "Personal Lunge Time Leaderboard", description = st)
+		await interaction.response.send_message(embed = embed)
+@bot.tree.command() 
+async def personal_leaderboard(interaction: discord.Interaction, user: typing.Optional[discord.Member]):
+	if user == None:
+		user = interaction.user
 	load_data()
 	lb = data["leaderboard"]
 	st = ""
 	i = 1
-	for e in lb[:10]:
-		st += f"{i}. `{e[0]}` - {(await interaction.guild.fetch_member(e[1])).mention}\n"
-	embed = discord.Embed(title = "Lunge Time Leaderboard", description = st)
+	s = 1
+	for e in lb:
+		if i > 10:
+			break
+		if e[1] == user.id:
+			st += f"{s} `{e[0]}` - {user.mention}\n"
+			i += 1
+
+		s += 1
+	embed = discord.Embed(title = "Personal Lunge Time Leaderboard", description = st)
 	await interaction.response.send_message(embed = embed)
 
 @bot.tree.command()
@@ -179,7 +248,51 @@ async def ping_lunge(interaction: discord.Interaction):
 	finish_view.channel = interaction.channel
 	finish_view.user = interaction.user
 	await finish_view.wait()
-      
+
+@bot.tree.command()
+async def balance(interaction:discord.Interaction):
+	embed = discord.Embed(title = "Your account balance", color = 0xffffff)
+	embed.add_field(name = "Jeff points", value = f"`{get_jp(interaction.user.id)}`")
+	embed.add_field(name = "Eugene points", value = f"`{get_ep(interaction.user.id)}`")
+	await interaction.response.send_message(embed = embed)
+
+@bot.tree.command()
+async def exchange(interaction: discord.Interaction, amount: int):
+	if amount < 0:
+		await interaction.response.send_message("no you")
+		return
+	if get_jp(interaction.user.id) >= amount * 40:
+		jp(interaction.user.id, -40 * amount)
+		ep(interaction.user.id, amount)
+		embed = discord.Embed(title = "Your account balance", color = 0xffffff)
+		embed.add_field(name = "Jeff points", value = f"`{get_jp(interaction.user.id)}`")
+		embed.add_field(name = "Eugene points", value = f"`{get_ep(interaction.user.id)}`")
+		await interaction.response.send_message(f"You purchased `{amount}` Eugene Points for `{40 * amount}` Jeff points.", embed = embed, ephemeral =True)
+	else:
+		await interaction.response.send_message("Ur broke")
+
+@bot.tree.command()
+async def give_jp(interaction: discord.Interaction, target: discord.Member, amount: int):
+	if interaction.user.id == 1027233463520210984:
+		await interaction.response.send_message(jp(target.id, amount), ephemeral =True)
+
+@bot.tree.command()
+async def coinflip(interaction: discord.Interaction, amount: int, heads: bool):
+	if amount > get_jp(interaction.user.id):
+		await interaction.response.send_message("ur broke", ephemeral = True)
+		return 
+	if random.random() < 0.4:
+		jp(interaction.user.id, amount)
+		if heads:
+			await interaction.response.send_message(f"The coin landed on HEADS! You gained `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
+		else:
+			await interaction.response.send_message(f"The coin landed on TAILS! You gained `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
+	else:
+		jp(interaction.user.id, -1 * amount)
+		if heads:
+			await interaction.response.send_message(f"The coin landed on TAILS. You lost `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
+		else:
+			await interaction.response.send_message(f"The coin landed on HEADS! You lost `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
 
 bot.run(str(os.getenv("TOKEN")))
 
