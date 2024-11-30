@@ -164,7 +164,7 @@ class StartView(discord.ui.View):
 		style = discord.ButtonStyle.success
 	)
 	async def verify_link(self, interaction: discord.Interaction, button: discord.ui.Button):
-		self.view = FinishView(timeout = 500)
+		self.view = FinishView(timeout = 700)
 
 
 		await interaction.response.send_message(f"Started lunge timer! <t:{int(time.time())}:R>", ephemeral = True, view = self.view)
@@ -276,7 +276,7 @@ async def give_jp(interaction: discord.Interaction, target: discord.Member, amou
 	if interaction.user.id == 1027233463520210984:
 		await interaction.response.send_message(jp(target.id, amount), ephemeral =True)
 	else:
-		if amount >= get_jp(interaction.user.id):
+		if amount <= get_jp(interaction.user.id):
 			jp(interaction.user.id, -1 * amount)
 			jp(target.id, amount)
 			await interaction.response.send_message(f"{interaction.user.mention} gave `{amount}` Jeff Points to {target.mention}")
