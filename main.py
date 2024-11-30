@@ -275,6 +275,11 @@ async def exchange(interaction: discord.Interaction, amount: int):
 async def give_jp(interaction: discord.Interaction, target: discord.Member, amount: int):
 	if interaction.user.id == 1027233463520210984:
 		await interaction.response.send_message(jp(target.id, amount), ephemeral =True)
+	else:
+		if amount >= get_jp(interaction.user.id):
+			jp(interaction.user.id, -1 * amount)
+			jp(target.id, amount)
+			await interaction.response.send_message(f"{interaction.user.mention} gave `{amount}` Jeff Points to {target.mention}")
 
 @bot.tree.command()
 async def coinflip(interaction: discord.Interaction, amount: int, heads: bool):
