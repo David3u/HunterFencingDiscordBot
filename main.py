@@ -19,7 +19,6 @@ import typing
 
 guild_id = 628732169069789205
 
-
 ######
 
 
@@ -298,6 +297,193 @@ async def coinflip(interaction: discord.Interaction, amount: int, heads: bool):
 			await interaction.response.send_message(f"The coin landed on TAILS. You lost `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
 		else:
 			await interaction.response.send_message(f"The coin landed on HEADS! You lost `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
+
+
+def rps(id1, id2, m1, m2, w):
+	dct = ["Rock", "Paper", "Scissors"]
+	if m1 == m2:
+		jp(id1.id, w)
+		jp(id2.id, w)
+		return f"It was a tie!\n{id1.mention} chose {dct[m1]}. {id2.mention} chose {dct[m2]}."
+	if m2 == (m1 + 1) % 3:
+		jp(id2.id, w * 2)
+		return f"{id2.mention} won `{w}` Jeff Points!\n{id1.mention} chose {dct[m1]}. {id2.mention} chose {dct[m2]}."
+	else:
+		jp(id1.id, w * 2)
+		return f"{id1.mention} won `{w}` Jeff Points!\n{id1.mention} chose {dct[m1]}. {id2.mention} chose {dct[m2]}."
+
+
+class RPSWait(discord.ui.View):
+	user = None
+	wager = 0
+	move = 0
+	async def disable_button(self):
+		for item in self.children:
+			item.disabled = True
+			
+	async def on_timeout(self) -> None:
+		jp(self.user.id, self.wager)
+		await self.disable_button()
+		await self.message.edit(view = disabledM1())
+
+	
+	@discord.ui.button(
+		label = "Rock",
+		style = discord.ButtonStyle.success
+	)
+	async def rock(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+		if get_jp(interaction.user.id) > self.wager:
+			await interaction.response.send_message("Ur too broke", ephemeral = True)
+			return
+		if interaction.user.id == self.user.id:
+			await interaction.response.send_message("U cant play with ur self", ephemeral=True)
+			return 
+
+		jp(interaction.user.id, -1 * self.wager)
+		
+		await interaction.response.send_message(rps(self.user, interaction.user, self.move, 0, self.wager))
+
+		await self.message.edit(view = disabledM1())
+
+	@discord.ui.button(
+		label = "Paper",
+		style = discord.ButtonStyle.success
+	)
+	async def paper(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+		if get_jp(interaction.user.id) > self.wager:
+			await interaction.response.send_message("Ur too broke", ephemeral = True)
+			return
+
+		if interaction.user.id == self.user.id:
+			await interaction.response.send_message("U cant play with ur self", ephemeral=True)
+			return 
+
+		jp(interaction.user.id, -1 * self.wager)
+		
+		await interaction.response.send_message(rps(self.user, interaction.user, self.move, 1, self.wager))
+
+		await self.message.edit(view = disabledM1())
+
+	@discord.ui.button(
+		label = "Scissors",
+		style = discord.ButtonStyle.success
+	)
+	async def scissors(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+		if get_jp(interaction.user.id) > self.wager:
+			await interaction.response.send_message("Ur too broke", ephemeral = True)
+			return
+
+		if interaction.user.id == self.user.id:
+			await interaction.response.send_message("U cant play with ur self", ephemeral=True)
+			return 
+
+		jp(interaction.user.id, -1 * self.wager)
+		
+		await interaction.response.send_message(rps(self.user, interaction.user, self.move, 2, self.wager))
+
+		await self.message.edit(view = disabledM1())
+
+class disabledM1(discord.ui.View):
+	@discord.ui.button(
+		label = "Rock",
+		style = discord.ButtonStyle.gray,
+		disabled=True
+	)
+	async def rock(self, interaction: discord.Interaction, button: discord.ui.Button):
+		pass
+
+	@discord.ui.button(
+		label = "Paper",
+		style = discord.ButtonStyle.gray,
+		disabled=True
+	)
+	async def paper(self, interaction: discord.Interaction, button: discord.ui.Button):
+		pass
+
+	@discord.ui.button(
+		label = "Scissors",
+		style = discord.ButtonStyle.gray,
+		disabled=True
+	)
+	async def scissors(self, interaction: discord.Interaction, button: discord.ui.Button):
+		pass
+		
+class RPSMoveOne(discord.ui.View):
+	user = None
+	wager = 0
+	async def disable_button(self):
+		for item in self.children:
+			item.disabled = True
+			
+	async def on_timeout(self) -> None:
+		jp(self.user.id, self.wager)
+		await self.disable_button()
+		await self.message.edit(view = disabledM1())
+
+	
+	@discord.ui.button(
+		label = "Rock",
+		style = discord.ButtonStyle.success
+	)
+	async def rock(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+		wait = RPSWait(timeout = 400)
+		wait.wager = self.wager 
+		wait.move = 0
+		wait.user = self.user
+		embed = discord.Embed(title=f"{self.user.display_name} wants to play Rock Paper Scissors!", description=f"Wager: `{self.wager}` Jeff Points.", color = 0x00ff00)
+		await interaction.response.send_message(embed = embed, view = wait)
+		await self.message.edit(view = disabledM1())
+		wait.message = await interaction.original_response()
+
+	@discord.ui.button(
+		label = "Paper",
+		style = discord.ButtonStyle.success
+	)
+	async def paper(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+		wait = RPSWait(timeout = 400)
+		wait.wager = self.wager 
+		wait.move = 1
+		wait.user = self.user
+		embed = discord.Embed(title=f"{self.user.display_name} wants to play Rock Paper Scissors!", description=f"Wager: `{self.wager}` Jeff Points.", color = 0x00ff00)
+		await interaction.response.send_message(embed = embed, view = wait)
+		await self.message.edit(view = disabledM1())
+		wait.message = await interaction.original_response()
+
+	@discord.ui.button(
+		label = "Scissors",
+		style = discord.ButtonStyle.success
+	)
+	async def Scissors(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+		wait = RPSWait(timeout = 400)
+		wait.wager = self.wager 
+		wait.move = 2
+		wait.user = self.user
+		embed = discord.Embed(title=f"{self.user.display_name} wants to play Rock Paper Scissors!", description=f"Wager: `{self.wager}` Jeff Points.", color = 0x00ff00)
+		await interaction.response.send_message(embed = embed, view = wait)
+		await self.message.edit(view = disabledM1())
+		wait.message = await interaction.original_response()
+
+
+@bot.tree.command()
+async def rock_paper_scissors(interaction: discord.Interaction, wager: int):
+	if wager > get_jp(interaction.user.id):
+		await interaction.response.send_message("Ur broke!", ephemeral = True)
+		return 
+
+	embed = discord.Embed(title = "Choose your move", color = 0xbbbbbb)
+	jp(interaction.user.id, -1 * wager)
+	m1 = RPSMoveOne()
+	m1.wager = wager 
+	m1.user = interaction.user
+	await interaction.response.send_message(embed = embed, view = m1, ephemeral=True)
+	m1.message = await interaction.original_response()
+
 
 bot.run(str(os.getenv("TOKEN")))
 
