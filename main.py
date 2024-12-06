@@ -333,7 +333,7 @@ class RPSWait(discord.ui.View):
 	)
 	async def rock(self, interaction: discord.Interaction, button: discord.ui.Button):
 
-		if get_jp(interaction.user.id) > self.wager:
+		if get_jp(interaction.user.id) < self.wager:
 			await interaction.response.send_message("Ur too broke", ephemeral = True)
 			return
 		if interaction.user.id == self.user.id:
@@ -352,7 +352,7 @@ class RPSWait(discord.ui.View):
 	)
 	async def paper(self, interaction: discord.Interaction, button: discord.ui.Button):
 
-		if get_jp(interaction.user.id) > self.wager:
+		if get_jp(interaction.user.id) < self.wager:
 			await interaction.response.send_message("Ur too broke", ephemeral = True)
 			return
 
@@ -372,7 +372,7 @@ class RPSWait(discord.ui.View):
 	)
 	async def scissors(self, interaction: discord.Interaction, button: discord.ui.Button):
 
-		if get_jp(interaction.user.id) > self.wager:
+		if get_jp(interaction.user.id) < self.wager:
 			await interaction.response.send_message("Ur too broke", ephemeral = True)
 			return
 
