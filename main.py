@@ -475,6 +475,9 @@ async def rock_paper_scissors(interaction: discord.Interaction, wager: int):
 	if wager > get_jp(interaction.user.id):
 		await interaction.response.send_message("Ur broke!", ephemeral = True)
 		return 
+	if wager < 1:
+		await interaction.response.send_message("Are you emily? (bad at gambling)", ephemeral = True)
+		return 
 
 	embed = discord.Embed(title = "Choose your move", color = 0xbbbbbb)
 	jp(interaction.user.id, -1 * wager)
