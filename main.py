@@ -317,14 +317,15 @@ class RPSWait(discord.ui.View):
 	user = None
 	wager = 0
 	move = 0
+	f = False
 	async def disable_button(self):
 		for item in self.children:
 			item.disabled = True
 			
 	async def on_timeout(self) -> None:
-		jp(self.user.id, self.wager)
-		await self.disable_button()
 		await self.message.edit(view = disabledM1())
+		if not self.f:
+			jp(self.user.id, self.wager)
 
 	
 	@discord.ui.button(
@@ -339,7 +340,7 @@ class RPSWait(discord.ui.View):
 		if interaction.user.id == self.user.id:
 			await interaction.response.send_message("U cant play with ur self", ephemeral=True)
 			return 
-
+		self.f = True
 		jp(interaction.user.id, -1 * self.wager)
 		
 		await interaction.response.send_message(rps(self.user, interaction.user, self.move, 0, self.wager))
@@ -359,7 +360,7 @@ class RPSWait(discord.ui.View):
 		if interaction.user.id == self.user.id:
 			await interaction.response.send_message("U cant play with ur self", ephemeral=True)
 			return 
-
+		self.f = True
 		jp(interaction.user.id, -1 * self.wager)
 		
 		await interaction.response.send_message(rps(self.user, interaction.user, self.move, 1, self.wager))
@@ -379,7 +380,7 @@ class RPSWait(discord.ui.View):
 		if interaction.user.id == self.user.id:
 			await interaction.response.send_message("U cant play with ur self", ephemeral=True)
 			return 
-
+		self.f = True
 		jp(interaction.user.id, -1 * self.wager)
 		
 		await interaction.response.send_message(rps(self.user, interaction.user, self.move, 2, self.wager))
