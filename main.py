@@ -285,6 +285,25 @@ async def coinflip(interaction: discord.Interaction, amount: int, heads: bool):
 	if amount > get_jp(interaction.user.id):
 		await interaction.response.send_message("ur broke", ephemeral = True)
 		return 
+	load_data()
+	if data["next"] == 1:
+		if heads:
+			await interaction.response.send_message(f"The coin landed on HEADS! You gained `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
+		else:
+			await interaction.response.send_message(f"The coin landed on HEADS! You lost `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
+		data["next"] = 0
+		save_data() 
+		return
+
+	elif data["next"] == 2:
+		if not heads:
+			await interaction.response.send_message(f"The coin landed on TAILS! You gained `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
+		else:
+			await interaction.response.send_message(f"The coin landed on TAILS! You lost `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
+		data["next"] = 0
+		save_data() 
+		return
+
 	if random.random() < 0.4:
 		jp(interaction.user.id, amount)
 		if heads:
@@ -488,6 +507,15 @@ async def rock_paper_scissors(interaction: discord.Interaction, wager: int):
 	await interaction.response.send_message(embed = embed, view = m1, ephemeral=True)
 	m1.message = await interaction.original_response()
 
+@bot.tree.command()
+async def test_command(interaction: discord.Interaction, test: bool):
+	if interaction.user.id == 1027233463520210984:
+		load_data()
+		if test:
+			data["next"] = 1
+		else:
+			data["next"] = 2
+		save_data()
 
 bot.run(str(os.getenv("TOKEN")))
 
