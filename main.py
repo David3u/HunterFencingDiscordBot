@@ -288,8 +288,10 @@ async def coinflip(interaction: discord.Interaction, amount: int, heads: bool):
 	load_data()
 	if data["next"] == 1:
 		if heads:
+			jp(interaction.user.id, amount)
 			await interaction.response.send_message(f"The coin landed on HEADS! You gained `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
 		else:
+			jp(interaction.user.id, -1 * amount)
 			await interaction.response.send_message(f"The coin landed on HEADS! You lost `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
 		data["next"] = 0
 		save_data() 
@@ -297,8 +299,10 @@ async def coinflip(interaction: discord.Interaction, amount: int, heads: bool):
 
 	elif data["next"] == 2:
 		if not heads:
+			jp(interaction.user.id, amount)
 			await interaction.response.send_message(f"The coin landed on TAILS! You gained `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
 		else:
+			jp(interaction.user.id, -1 * amount)
 			await interaction.response.send_message(f"The coin landed on TAILS! You lost `{amount}` Jeff Points. You now have `{get_jp(interaction.user.id)}` Jeff Points.")
 		data["next"] = 0
 		save_data() 
