@@ -362,7 +362,6 @@ class RPSWait(discord.ui.View):
 			await interaction.response.send_message("U cant play with ur self", ephemeral=True)
 			return 
 		self.f = True
-		jp(interaction.user.id, -1 * self.wager)
 		
 		await interaction.response.send_message(rps(self.user, interaction.user, self.move, 0, self.wager))
 
@@ -382,7 +381,6 @@ class RPSWait(discord.ui.View):
 			await interaction.response.send_message("U cant play with ur self", ephemeral=True)
 			return 
 		self.f = True
-		jp(interaction.user.id, -1 * self.wager)
 		
 		await interaction.response.send_message(rps(self.user, interaction.user, self.move, 1, self.wager))
 
@@ -402,7 +400,6 @@ class RPSWait(discord.ui.View):
 			await interaction.response.send_message("U cant play with ur self", ephemeral=True)
 			return 
 		self.f = True
-		jp(interaction.user.id, -1 * self.wager)
 		
 		await interaction.response.send_message(rps(self.user, interaction.user, self.move, 2, self.wager))
 
