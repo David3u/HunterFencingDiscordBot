@@ -325,14 +325,14 @@ async def coinflip(interaction: discord.Interaction, amount: int, heads: bool):
 def rps(id1, id2, m1, m2, w):
 	dct = ["Rock", "Paper", "Scissors"]
 	if m1 == m2:
-		jp(id1.id, w)
-		jp(id2.id, w)
 		return f"It was a tie!\n{id1.mention} chose {dct[m1]}. {id2.mention} chose {dct[m2]}."
 	if m2 == (m1 + 1) % 3:
-		jp(id2.id, w * 2)
+		jp(id2.id, w)
+		jp(id1.id, -1 * w)
 		return f"{id2.mention} won `{w}` Jeff Points!\n{id1.mention} chose {dct[m1]}. {id2.mention} chose {dct[m2]}."
 	else:
-		jp(id1.id, w * 2)
+		jp(id1.id, w)
+		jp(id2.id, -1 * w)
 		return f"{id1.mention} won `{w}` Jeff Points!\n{id1.mention} chose {dct[m1]}. {id2.mention} chose {dct[m2]}."
 
 
@@ -347,8 +347,6 @@ class RPSWait(discord.ui.View):
 			
 	async def on_timeout(self) -> None:
 		await self.message.edit(view = disabledM1())
-		if not self.f:
-			jp(self.user.id, self.wager)
 
 	
 	@discord.ui.button(
@@ -504,7 +502,6 @@ async def rock_paper_scissors(interaction: discord.Interaction, wager: int):
 		return 
 
 	embed = discord.Embed(title = "Choose your move", color = 0xbbbbbb)
-	jp(interaction.user.id, -1 * wager)
 	m1 = RPSMoveOne()
 	m1.wager = wager 
 	m1.user = interaction.user
